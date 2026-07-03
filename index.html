@@ -10749,7 +10749,7 @@
       display: grid;
       align-content: start;
       justify-items: center;
-      padding: 122px 20px 138px;
+      padding: 92px 20px 118px;
     }
 
     .split-slots {
@@ -10781,7 +10781,7 @@
 
     .split-meaning {
       min-height: 62px;
-      margin: 0 0 94px;
+      margin: 0 0 54px;
       color: #222;
       text-align: center;
       font-size: 20px;
@@ -10793,9 +10793,9 @@
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 54px;
-      min-height: 76px;
-      margin-bottom: 60px;
+      gap: 22px;
+      min-height: 62px;
+      margin-bottom: 18px;
     }
 
     .split-chunk {
@@ -10842,6 +10842,7 @@
     .split-delete {
       min-width: 102px;
       min-height: 52px;
+      margin-top: -50px;
       border: 0;
       border-radius: 13px;
       background: #ffe8dd;
@@ -13748,7 +13749,7 @@
       min-width: 60px;
       height: 66px;
       padding: 0 8px;
-      font-size: 30px;
+      font-size: 20px;
     }
 
     #spellingLetterBank.spelling-letter-bank.is-letter-grid {
@@ -16306,7 +16307,8 @@
       stepIndex: 0,
       phase: "split",
       drawerOpen: false,
-      lastResult: ""
+      lastResult: "",
+      returnScreen: ""
     };
     let splitGameState = {
       words: [],
@@ -18094,7 +18096,8 @@
         startTime: Date.now(),
         durationSeconds: 0,
         drawerOpen: false,
-        lastResult: ""
+        lastResult: "",
+        returnScreen: rangeContext.returnScreen || ""
       };
       renderSplitGame();
       navigate("split-game");
@@ -18113,6 +18116,7 @@
       splitGameState.startTime = Date.now();
       splitGameState.durationSeconds = 0;
       splitGameState.lastResult = "";
+      splitGameState.returnScreen = resultRetryContext.returnScreen || splitGameState.returnScreen || "";
       renderSplitGame();
       navigate("split-game");
     }
@@ -18133,7 +18137,7 @@
       const learned = splitGameState.completedIds.size || splitGameState.words.length;
       splitGameState.durationSeconds = Math.max(1, Math.round((Date.now() - splitGameState.startTime) / 1000));
       const accuracy = splitGameState.attempts ? Math.round((splitGameState.correctCount / splitGameState.attempts) * 100) : 100;
-      resultRetryContext = { type: "split", mode: "split" };
+      resultRetryContext = { type: "split", mode: "split", returnScreen: splitGameState.returnScreen || "" };
       $(".split-result-card h2").textContent = "拆分拼写完成啦！";
       $("#splitResultWords").textContent = learned;
       $("#splitResultDuration").textContent = `${Math.floor(splitGameState.durationSeconds / 60)}:${String(splitGameState.durationSeconds % 60).padStart(2, "0")}`;
@@ -18560,6 +18564,7 @@
     function openPracticeGame(mode) {
       const selected = selectedRangeWords();
       hideToast();
+      const returnScreen = rangeContext.returnScreen || resultRetryContext.returnScreen || "";
       practiceGameState = {
         mode,
         words: selected.map((item) => ({ ...item, letters: deterministicLetters(item.word) })),
@@ -18580,7 +18585,8 @@
         readingRecording: false,
         revealed: false,
         feedbackLocked: false,
-        feedbackTimer: null
+        feedbackTimer: null,
+        returnScreen
       };
       renderPracticeGame();
       navigate("practice-game");
@@ -18595,7 +18601,7 @@
       const duration = Math.max(1, Math.round((Date.now() - practiceGameState.startTime) / 1000));
       const accuracy = practiceGameState.attempts ? Math.round((practiceGameState.correctCount / practiceGameState.attempts) * 100) : 100;
       const config = practiceModeConfig[practiceGameState.mode] || practiceModeConfig.phonics;
-      resultRetryContext = { type: "practice", mode: practiceGameState.mode };
+      resultRetryContext = { type: "practice", mode: practiceGameState.mode, returnScreen: practiceGameState.returnScreen || "" };
       $(".split-result-card h2").textContent = `${config.title}完成啦！`;
       $("#splitResultWords").textContent = learned;
       $("#splitResultDuration").textContent = `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, "0")}`;
@@ -19290,8 +19296,13 @@
         }
 
         if (event.target.closest("#split-result-screen [data-back]")) {
-          replaceHistoryStack(["home", "course", "range-select"]);
-          navigate("range-select", false);
+          if (resultRetryContext.returnScreen) {
+            replaceHistoryStack(["home", resultRetryContext.returnScreen]);
+            navigate(resultRetryContext.returnScreen, false);
+          } else {
+            replaceHistoryStack(["home", "course", "range-select"]);
+            navigate("range-select", false);
+          }
           return;
         }
 
