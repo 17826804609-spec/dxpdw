@@ -10842,7 +10842,7 @@
     .split-delete {
       min-width: 102px;
       min-height: 52px;
-      margin-top: -50px;
+      margin-top: 20px;
       border: 0;
       border-radius: 13px;
       background: #ffe8dd;
@@ -12637,12 +12637,16 @@
 
     .spelling-slot.is-chunk,
     .split-slot {
-      min-width: 88px;
+      width: var(--split-slot-size, 88px);
+      min-width: var(--split-slot-size, 88px);
+      height: var(--split-slot-height, 92px);
+      font-size: var(--split-slot-font-size, 46px);
     }
 
     .spelling-slot.is-chunk:not(:empty),
     .split-slot:not(:empty) {
-      min-width: 62px;
+      min-width: var(--split-filled-min, 62px);
+      font-size: var(--split-filled-font-size, 46px);
     }
 
     .spelling-slot.is-current,
@@ -18051,12 +18055,22 @@
       if (!item) return;
       const total = Math.max(splitGameState.words.length, 1);
       const orderedChunks = [...item.chunks].sort((a, b) => a.index - b.index);
+      const slotCount = Math.max(orderedChunks.length, 1);
+      const compactSlotGap = slotCount > 3 ? 8 : 14;
+      const compactSlotSize = Math.max(48, Math.min(78, Math.floor((292 - Math.max(0, slotCount - 1) * compactSlotGap) / slotCount)));
+      const compactSlotHeight = Math.max(64, Math.round(compactSlotSize * 1.08));
       $("#splitGameTitle").textContent = `拆分拼写 ${splitGameState.index + 1}/${total}`;
       $("#splitSlots").innerHTML = orderedChunks.map((chunk, slotIndex) => {
         const selectedChunkIndex = splitGameState.answerIndexes[slotIndex];
         const value = item.chunks.find((part) => part.index === selectedChunkIndex)?.chunk || "";
         return `<span class="split-slot ${slotIndex === splitGameState.answerIndexes.length ? "is-current" : ""}">${value}</span>`;
       }).join("");
+      $("#splitSlots").style.setProperty("gap", `${compactSlotGap}px`);
+      $("#splitSlots").style.setProperty("--split-slot-size", `${compactSlotSize}px`);
+      $("#splitSlots").style.setProperty("--split-slot-height", `${compactSlotHeight}px`);
+      $("#splitSlots").style.setProperty("--split-slot-font-size", `${Math.max(26, Math.round(compactSlotSize * .52))}px`);
+      $("#splitSlots").style.setProperty("--split-filled-min", `${Math.max(44, Math.round(compactSlotSize * .78))}px`);
+      $("#splitSlots").style.setProperty("--split-filled-font-size", `${Math.max(20, Math.round(compactSlotSize * .42))}px`);
       $("#splitMeaning").innerHTML = splitMeaning(item);
       $("#splitChunkBank").innerHTML = item.chunks.map((chunk, bankIndex) => {
         const used = splitGameState.answerIndexes.includes(chunk.index);
